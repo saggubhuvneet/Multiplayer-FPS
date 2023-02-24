@@ -1,2 +1,2 @@
 # Multiplayer-FPS
-remaking of Counter Strike
+remaking of Counter Strike { UNDER DEVLOPMENT }
