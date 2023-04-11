@@ -44,7 +44,7 @@ public class PunLauncher : MonoBehaviourPunCallbacks  //------------------------
 
     public override void OnJoinedLobby()
     {
-        MenuManager.Instance.OpenMenu("tittle");
+        //MenuManager.Instance.OpenMenu("tittle");
         Debug.Log("Joined Lobby");
        
     }

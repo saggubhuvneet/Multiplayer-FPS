@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine.UI;
 using TMPro;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
+using System.IO;
 
 public class SampleRun : MonoBehaviourPunCallbacks, IPunObservable, IDamageable
 {
@@ -27,7 +29,15 @@ public class SampleRun : MonoBehaviourPunCallbacks, IPunObservable, IDamageable
 	[SerializeField] GameObject handIK;
 	[SerializeField] GameObject ui;
 
-    CharacterController characterController;
+	[Header("Gun info")]
+	[SerializeField] GameObject _gunPickInfo_UI;
+	[SerializeField] GameObject _carbine_Info;
+	[SerializeField] GameObject _cal50_info;
+	[SerializeField] GameObject _smg9_info;
+	[SerializeField] GameObject _ak47_info;
+
+	//public GameObject Ak45Pickup;
+	CharacterController characterController;
 	float verticalLookRotation;
 	bool isAimed;
 	bool isDead = false;
@@ -42,6 +52,7 @@ public class SampleRun : MonoBehaviourPunCallbacks, IPunObservable, IDamageable
 	const float maxHealth = 300f;
 	float currentHealth = maxHealth;
 	PlayerManager playerManager;
+	public GunSelection _gunSelection;
 
 	PhotonView PV;
 
@@ -53,6 +64,7 @@ public class SampleRun : MonoBehaviourPunCallbacks, IPunObservable, IDamageable
 		isAimed = false;
 		isDead = false;
 		playerManager = PhotonView.Find((int)PV.InstantiationData[0]).GetComponent<PlayerManager>();
+
 	}
 
     private void Start()
@@ -60,6 +72,7 @@ public class SampleRun : MonoBehaviourPunCallbacks, IPunObservable, IDamageable
         if (!PV.IsMine)
         {
 			Destroy(ui);
+			Destroy(cameraHolder);
 	    }
 		//Cursor.lockState = CursorLockMode.;
 	}
@@ -71,11 +84,11 @@ public class SampleRun : MonoBehaviourPunCallbacks, IPunObservable, IDamageable
 			return;
 		Move();
 		Look();
-		Aim();                                                                                                          
+		Aim();
 		
 	}
-    
 
+    
     void Move()
 	{
 
@@ -131,7 +144,6 @@ public class SampleRun : MonoBehaviourPunCallbacks, IPunObservable, IDamageable
 			Debug.Log("aimed");
 			isAimed = true;
 		}
-			
 		
 	}
 
@@ -171,6 +183,7 @@ public class SampleRun : MonoBehaviourPunCallbacks, IPunObservable, IDamageable
 		deathCamera.SetActive(true);
 	
 		yield return new WaitForSeconds(4f);
+		GunDrop();
 		playerManager.PlayerDie();
     }
 
@@ -185,4 +198,105 @@ public class SampleRun : MonoBehaviourPunCallbacks, IPunObservable, IDamageable
             top_healthimage.fillAmount = (float)stream.ReceiveNext();
         }
     }
+
+	// Gun Droping system;
+	public void GunDrop()
+    {
+		//PhotonNetwork.Instantiate(Path.Combine("GunPickUps", "Ak47Pick"), transform.position, Quaternion.identity, 0, new object[] { PV.ViewID });
+		Debug.Log("A gun is dropes");
+		if(_gunSelection.itemIndex == 0){
+			PhotonNetwork.Instantiate(Path.Combine("GunPickUps", "CarbinePick"), transform.position, Quaternion.identity, 0, new object[] { PV.ViewID });
+		}if(_gunSelection.itemIndex == 1){
+			PhotonNetwork.Instantiate(Path.Combine("GunPickUps", "Cal50Pick"), transform.position, Quaternion.identity, 0, new object[] { PV.ViewID });
+		}if(_gunSelection.itemIndex == 2){
+			PhotonNetwork.Instantiate(Path.Combine("GunPickUps", "Ak47Pick"), transform.position, Quaternion.identity, 0, new object[] { PV.ViewID });
+		}if(_gunSelection.itemIndex == 3){
+			PhotonNetwork.Instantiate(Path.Combine("GunPickUps", "SMGPick"), transform.position, Quaternion.identity, 0, new object[] { PV.ViewID });
+		}
+	}
+	// gun Picking  UI system
+    public void OnTriggerExit(Collider other)
+    {
+		
+        if(other.gameObject.CompareTag("_carbine_") || other.gameObject.CompareTag("_cal_") || other.gameObject.CompareTag("_ak_") || other.gameObject.CompareTag("_smg_"))
+        {
+			_carbine_Info.SetActive(false);_cal50_info.SetActive(false);_smg9_info.SetActive(false);_ak47_info.SetActive(false);
+			_gunPickInfo_UI.GetComponent<Animator>().Play("idle");
+		}
+	}
+
+    public void OnTriggerStay(Collider other)
+    {
+		if (!PV.IsMine)
+			return;
+		Debug.Log("Pick the gun up you idiot");
+		if (other.gameObject.CompareTag("_carbine_")) {
+			_gunPickInfo_UI.GetComponent<Animator>().Play("play");
+			_carbine_Info.SetActive(true);
+            if (Input.GetKeyDown(KeyCode.P)){
+				_gunSelection.itemIndex = 0;
+                _carbine_Info.SetActive(false);
+                _gunPickInfo_UI.GetComponent<Animator>().Play("idle");
+				//PhotonNetwork.Destroy(other.gameObject);
+
+				int viewID = other.gameObject.GetComponent<PhotonView>().ViewID;
+				PV.RPC("DestroyGunPickups", RpcTarget.MasterClient, viewID);
+            }
+        }
+        if (other.gameObject.CompareTag("_cal_"))
+        {
+            _gunPickInfo_UI.GetComponent<Animator>().Play("play");
+            _cal50_info.SetActive(true);
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                _gunSelection.itemIndex = 1;
+                _cal50_info.SetActive(false);
+                _gunPickInfo_UI.GetComponent<Animator>().Play("idle");
+				//PhotonNetwork.Destroy(other.gameObject);
+
+				int viewID = other.gameObject.GetComponent<PhotonView>().ViewID;
+				PV.RPC("DestroyGunPickups", RpcTarget.MasterClient, viewID);
+			}
+        }
+        if (other.gameObject.CompareTag("_ak_"))
+        {
+            _gunPickInfo_UI.GetComponent<Animator>().Play("play");
+            _ak47_info.SetActive(true);
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                _gunSelection.itemIndex = 2;
+                _ak47_info.SetActive(false);
+                _gunPickInfo_UI.GetComponent<Animator>().Play("idle");
+				//PhotonNetwork.Destroy(other.gameObject);
+
+				int viewID = other.gameObject.GetComponent<PhotonView>().ViewID;
+				PV.RPC("DestroyGunPickups", RpcTarget.MasterClient, viewID);
+
+			}
+        }
+        if (other.gameObject.CompareTag("_smg_"))
+        {
+            _gunPickInfo_UI.GetComponent<Animator>().Play("play");
+            _smg9_info.SetActive(true);
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                _gunSelection.itemIndex = 3;
+                _smg9_info.SetActive(false);
+                _gunPickInfo_UI.GetComponent<Animator>().Play("idle");
+				//PhotonNetwork.Destroy(other.gameObject);
+
+				int viewID = other.gameObject.GetComponent<PhotonView>().ViewID;
+				PV.RPC("DestroyGunPickups", RpcTarget.MasterClient, viewID);
+			}
+        }
+		
+	}
+
+	//Gun pick Up destroy
+	[PunRPC]
+	public void DestroyGunPickups(int viewID)
+    {
+		PhotonNetwork.Destroy(PhotonView.Find(viewID).gameObject);
+    }
+	
 }

@@ -7,20 +7,21 @@ using TMPro;
 public class GunMech : MonoBehaviour
 {
 	[Header("Gun Specs")]
-    public float fireRate = 0.25f;
-    public float weaponRange = 20f;
-	public float damage = 100f;
+    public float fireRate ;
+    public float weaponRange;
+	public float damage ;
 
 	[Header("Ammo and Reload")]
-	public int maxAmmo = 10;
-	public int totalAmmo = 25;
+	public int maxAmmo ;
+	public int totalAmmo ;
 	private int currentAmmo;
 
-	public float ReloadTime = 2f;
+	public float ReloadTime ;
 	bool isReloading = false;
 
 	public TextMeshProUGUI AmmoText;
 	public TextMeshProUGUI ReloadText;
+	public GameObject AmmoUi;
 
 	[Header(" ")]
 	public Transform gunEnd;
@@ -57,6 +58,7 @@ public class GunMech : MonoBehaviour
         {
 			Destroy(mainCamera);
 			Destroy(aimCamera);
+			Destroy(AmmoUi);
         }
 		currentAmmo = maxAmmo;
     }
@@ -66,7 +68,6 @@ public class GunMech : MonoBehaviour
 		if (!PV.IsMine)
 			return;
 
-		AimLock();
 
 		if (isReloading)
         {
@@ -74,6 +75,8 @@ public class GunMech : MonoBehaviour
 			ReloadText.gameObject.SetActive(true);
 			return;
 		}
+
+		AimLock();
 
 		AmmoText.gameObject.SetActive(true);
 		ReloadText.gameObject.SetActive(false);
@@ -107,7 +110,7 @@ public class GunMech : MonoBehaviour
 		RaycastHit hit;
 		if (Physics.Raycast(rayOrigin, gunEnd.forward, out hit, weaponRange))
 		{
-			Debug.Log(hit.collider);
+			//Debug.Log(hit.collider);
 			hit.collider.gameObject.GetComponent<IDamageable>()?.TakeDamage(damage);
 			HandleHit(hit);
 		}
@@ -127,7 +130,8 @@ public class GunMech : MonoBehaviour
 			totalAmmo = totalAmmo - maxAmmo + currentAmmo;
 			currentAmmo = maxAmmo;
 		}
-
+		mainCamera.SetActive(true);
+		aimCamera.SetActive(false);
 		Debug.Log("Reloading.........");
 		yield return new WaitForSeconds(ReloadTime);
 
